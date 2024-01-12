@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { TestContractContract, connectWallet, updateMessage, loadCurrentMessage, getCurrentWalletConnected, resetMetamaskConnection } from './util/interact';
+import {
+  TestContractContract,
+  connectWallet,
+  updateMessage,
+  loadCurrentMessage,
+  getCurrentWalletConnected,
+  resetMetamaskConnection,
+} from './util/interact';
 
 const TestContract = () => {
   const [walletAddress, setWallet] = useState('');
@@ -12,23 +19,24 @@ const TestContract = () => {
       // Reset Metamask connection when the component mounts
       const resetResult = await resetMetamaskConnection();
       console.log(resetResult.status);
-
-      // Connect to Metamask
-      const connectResult = await connectWallet();
-      setWallet(connectResult.address);
-      setStatus(connectResult.status);
-
+  
+      // Get the current wallet connection status
+      const walletInfo = await getCurrentWalletConnected();
+      setWallet(walletInfo.address);
+      setStatus(walletInfo.status);
+  
       // Fetch current message
       const msg = await loadCurrentMessage();
       setMessage(msg);
-
+  
       // Set up event listeners
       addSmartContractListener();
       addWalletListener();
     };
-
+  
     initializeApp();
   }, []);
+  
 
   const addSmartContractListener = () => {
     TestContractContract.events.UpdatedMessages({}, (error, data) => {
@@ -66,6 +74,7 @@ const TestContract = () => {
   };
 
   const connectWalletPressed = async () => {
+    // Request user accounts only when the user clicks the connect button
     const walletResponse = await connectWallet();
     setStatus(walletResponse.status);
     setWallet(walletResponse.address);
@@ -78,10 +87,6 @@ const TestContract = () => {
 
   return (
     <div id="container" style={styles.container}>
-      <button id="resetButton" style={styles.walletButton} onClick={resetMetamaskConnection}>
-        Reset Metamask Connection
-      </button>
-      
       <button id="walletButton" style={styles.walletButton} onClick={connectWalletPressed}>
         {walletAddress.length > 0 ? (
           `Connected: ${String(walletAddress).substring(0, 6)}...${String(walletAddress).substring(38)}`
@@ -121,11 +126,6 @@ const styles = {
     padding: '20px',
     backgroundColor: '#ffe6f2', // Light pink background color
     borderRadius: '15px',
-  },
-  logo: {
-    width: '100px',
-    height: '100px',
-    marginBottom: '20px',
   },
   walletButton: {
     padding: '10px',
